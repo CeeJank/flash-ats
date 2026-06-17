@@ -1,19 +1,14 @@
 import React from "react";
-import {
-  TouchableOpacity,
-  Text,
-  View,
-  StyleSheet,
-  Button,
-  LayoutChangeEvent,
-} from "react-native";
+import { View, StyleSheet, LayoutChangeEvent, ViewStyle } from "react-native";
 
 export default function Ocrzone({
   onLayout,
+  style,
 }: {
   onLayout?: (e: LayoutChangeEvent) => void;
+  style?: ViewStyle;
 }) {
-  return <View onLayout={onLayout} style={[styles.ocrContainer]}></View>;
+  return <View onLayout={onLayout} style={[styles.ocrContainer, style]}></View>;
 }
 
 const styles = StyleSheet.create({

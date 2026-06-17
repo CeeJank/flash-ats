@@ -8,24 +8,45 @@ import {
 import { NitroModules } from "react-native-nitro-modules";
 import { useSharedValue } from "react-native-reanimated";
 import { View, StyleSheet, Text } from "react-native";
-import { useTextRecognition } from "react-native-vision-camera-ocr-plus";
+import {
+  useTextRecognition,
+  ScanRegion,
+  PhotoRecognizer,
+} from "react-native-vision-camera-ocr-plus";
 import { scheduleOnRN } from "react-native-worklets";
 import { Submit, Verify, Retake } from "../components/Buttons";
 import Ocrzone from "@/components/Ocrzone";
+import { Dimensions, LayoutChangeEvent } from "react-native";
 
 export default function CameraComponent() {
   const { hasPermission, requestPermission } = useCameraPermission();
   const device = useCameraDevice("back");
   const [detectedText, setDetectedText] = useState("");
-  const { scanText } = useTextRecognition({
+  const { scanText, recognizer } = useTextRecognition({
     language: "latin",
     frameSkipThreshold: 5,
   });
 
-  const handleLayout;
+  const onLayout = (e: LayoutChangeEvent) => {
+    const { x, y, width, height } = e.nativeEvent.layout;
+    const { width: sw, height: sh } = Dimensions.get("window");
+
+    recognizer.configure({
+      language: "latin",
+      frameSkipThreshold: 5,
+      useLightweightMode: false,
+      scanRegion: {
+        left: (x / sw) * 100,
+        top: (y / sh) * 100,
+        width: (Math.min(width, sw) / sw) * 100,
+        height: (Math.min(height, sh) / sh) * 100,
+      },
+    });
+  };
+
   const frameOutput = useFrameOutput({
     pixelFormat: "rgb",
-    onFrame(frame, { scanRegion: {} }) {
+    onFrame(frame) {
       "worklet";
       const result = scanText(frame);
       if (result.resultText) {
@@ -62,7 +83,7 @@ export default function CameraComponent() {
         width={isLarge ? 200 : 100}
         height={isLarge ? 100 : 50}
       />
-      <Ocrzone></Ocrzone>
+      <Ocrzone onLayout={onLayout} style={styles.ocrZone}></Ocrzone>
     </View>
   );
 }
