@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Camera,
   useCameraPermission,
@@ -18,6 +18,7 @@ import { scheduleOnRN } from "react-native-worklets";
 import { Submit, Verify, Retake } from "../components/Buttons";
 import Ocrzone from "@/components/Ocrzone";
 import { Dimensions, LayoutChangeEvent } from "react-native";
+import { NitroImageProps, NitroImage, type Image as NitroImageHandle} from "react-native-nitro-image";
 
 export default function CameraComponent() {
   // ask for camera permission
@@ -33,8 +34,17 @@ export default function CameraComponent() {
     frameSkipThreshold: 5,
   });
 
-  const [lastPin, setLastPin] = useState<string | null>(null);
+  const [finalPin, setFinalPin] = useState<string | null>(null);
   const [stableCount, setStableCount] = useState(0);
+
+  const [frozen, setFrozen] = useState(false);
+  const [frozenImage, setFrozenImage] = useState<NitroImageHandle | null>(null);
+
+
+  const lastPinRef = useRef<string | null>(null);
+  const stableCountRef = useRef(0);
+  const freezingRef = useRef(false);
+
   const onLayout = (e: LayoutChangeEvent) => {
     const { x, y, width, height } = e.nativeEvent.layout;
     const { width: sw, height: sh } = Dimensions.get("window");
@@ -57,6 +67,36 @@ export default function CameraComponent() {
     });
   };
 
+  async function freezeAndConfirm(candidatePin: string) {
+    if (freezingRef.current) return;
+    freezingRef.current = true;
+
+    try {
+      const photo = await photoOutput.capturePhoto(
+        { flashMode: "off", enableShutterSound: false },
+        {}
+      )
+
+      const path = await photo.saveToTemporaryFileAsync();
+      const image = await photo.toImageAsync();
+
+      // freeze and confirm the 6 digit pin
+      setFrozenImage(image);
+      setFrozen(true);
+
+      const result = await PhotoRecognizer({ uri: path });
+      const confirmedPin = extractPin(result.resultText)
+
+      setFinalPin(confirmedPin ?? candidatePin);
+
+      photo.dispose();
+    } finally {
+      freezingRef.current = false;
+
+    }
+  }
+
+  // capture photo
   const photoOutput = usePhotoOutput();
 
   function handleOcrText(text: string) {
@@ -64,11 +104,16 @@ export default function CameraComponent() {
     const pin = extractPin(text);
     if (!pin || frozen) return;
 
-    if (lastPinRef.currecnt === pin) {
+    // trust algorithm
+    if (lastPinRef.current === pin) {
       stableCountRef.current += 1;
     } else {
-      lastPrinRef.current = pin;
+      lastPinRef.current = pin;
       stableCountRef.current = 1;
+    }
+
+    if (stableCountRef.current >= 3) {
+      void freezeAndConfirm(pin);
     }
 
   }
@@ -92,23 +137,21 @@ export default function CameraComponent() {
     },
   });
 
+  const onRetake = () => {
+    setFrozen(false);
+    setFrozenImage(null);
+    setFinalPin(null);
+    setDetectedText("")
+    lastPinRef.current = null;
+    stableCountRef.current = 0;
+  }
+
   const pinRegex = /\b\d(?:[/s-]?\d){5}\b/;
 
   function extractPin(text: string) {
     const match = text.match(pinRegex);
     return match ? match[0].replace(/\D/g, "") : null;
   }
-
-  const photo = await photoOutput.capturePhoto(
-    { flashMode: "off", enableShutterSound: false },
-    {}
-  )
-
-  const path = await photo.saveToTemporaryFileAsync();
-  const image = await photo.toImageAsync();
-
-  setFrozenImage(image);
-  setFrozen(true);
 
   const onTap = () => {
     return;
