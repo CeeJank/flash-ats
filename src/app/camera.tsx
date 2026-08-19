@@ -26,7 +26,7 @@ import {
   type Image as NitroImageHandle,
 } from "react-native-nitro-image";
 import { sendPin } from "@/services/sendPin";
-
+import * as ort from 'onnxruntime-react-native';
 type SubmissionState = "idle" | "submitting" | "success" | "error";
 
 export default function CameraComponent() {
@@ -194,6 +194,13 @@ export default function CameraComponent() {
     if (!hasPermission) requestPermission();
   }, [hasPermission, requestPermission]);
   if (!device) return null;
+
+  async function onnxInit(session: ort.InferenceSession) {
+    await ort.InferenceSession.create(model, {
+      executionProviders: ["cpu"],
+    });
+    return session;
+  }
 
   return (
     <View style={styles.container}>
