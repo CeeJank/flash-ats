@@ -22,13 +22,12 @@ export function CapturePageButton({ label, variant, disabled, onPress}: ButtonPr
   )
 }
 
-export function CapturePhotoButton({ label, onPress }: ButtonProps) {
+export function ShutterButton({ onPress }: ButtonProps) {
   return (
-    <Host matchContents>
+    <Host matchContents style={styles.captureButtonContainer}>
       <Button
-        label={label}
-        onPress={onPress}
         style={styles.captureButton}
+        onPress={onPress}
       >
       </Button>
     </Host>
@@ -37,11 +36,17 @@ export function CapturePhotoButton({ label, onPress }: ButtonProps) {
 
 const styles = StyleSheet.create({
   captureButton: {
-    width: 10,
-    height: 10,
+    width: 80,
+    height: 80,
     borderRadius: 50,
     borderWidth: 3,
     borderColor: "gray",
     backgroundColor: "white",
+  },
+  captureButtonContainer: {
+    position:'absolute',
+    top: '80%',
+    left: '40%',
   }
+
 })
