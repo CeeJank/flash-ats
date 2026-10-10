@@ -49,12 +49,14 @@ export default function CapturePage() {
       if (cropRegion) {
 
         // measure the relative
+        // takes position from <ScanRegion> loads, with nativeEvent.layout
         const xPercent = cropRegion.x / screenWidth;
         const yPercent = cropRegion.y / screenHeight;
         const widthPercent = cropRegion.width / screenWidth;
         const heightPercent = cropRegion.height / screenHeight;
 
         // crop with percentage of screen * actual image
+        // multiply with the actual width and height of the image, which just means the dimensions of the device
         const cropped = image.crop(
           xPercent * image.width,
           yPercent * image.height,
@@ -64,6 +66,7 @@ export default function CapturePage() {
         setImageState(cropped);
       }
 
+      // dispose after to save memory
       photo.dispose();
     } catch (error) {
       console.error("Failed to capture photo:", error);
@@ -80,6 +83,7 @@ export default function CapturePage() {
         outputs={[photoOutput]}
       />
 
+      {/*takes coordinates of box on screen on render*/}
       <ScanRegion
         onLayout={(event) => {
         const { x, y, width, height } = event.nativeEvent.layout;
@@ -90,7 +94,7 @@ export default function CapturePage() {
       {/*shutter button control*/}
       <ShutterButton onPress={handleCapture}/>
 
-      {/*produces falsy if no image has been taken*/}
+      {/* && produces falsy if no image has been taken*/}
       {imageState &&
         <View style={{
           top: '50%',
@@ -103,6 +107,7 @@ export default function CapturePage() {
           alignSelf: 'center',
           position: 'absolute',
         }}>
+        {/*render the image itself*/}
         <NitroImage
           style={{ flex: 1  }}
           // ! tells TS it's definitely not null from Image | null since it cannot be assigned that way
