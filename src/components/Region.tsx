@@ -1,32 +1,25 @@
 import { Text, View, StyleSheet } from "react-native";
 
-
-interface regionProps {
-  width: number;
-  height: number;
-  top: number;
-  left: number;
+type ScanRegionProps = {
+  onLayout?: (event: any) => void
 }
 
-export function scanRegion({ width, height, top, left }: regionProps) {
+export function ScanRegion({ onLayout }: ScanRegionProps) {
   return (
-    <View>
-      <div style={styles.scanBox}
-        width={width}
-        height={height}
-        top={top}
-        percentage={percentage}
-      ></div>
+    <View style={styles.scanBox} onLayout={onLayout}>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
   scanBox: {
+    top: '10%',
+    left: '10%',
+    width: 350,
+    height: 150,
     borderColor: "red",
     borderWidth: 5,
     position: "absolute",
-    padding: 2,
   }
 
 })
