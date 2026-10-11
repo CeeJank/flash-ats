@@ -48,22 +48,19 @@ export default function CapturePage() {
       const image = await photo.toImageAsync();
       if (cropRegion) {
 
-        // measure the relative
-        // takes position from <ScanRegion> loads, with nativeEvent.layout
-        const xPercent = cropRegion.x / screenWidth;
-        const yPercent = cropRegion.y / screenHeight;
-        const widthPercent = cropRegion.width / screenWidth;
-        const heightPercent = cropRegion.height / screenHeight;
+        // scale of image to actual screen
+        const scale = image.width / screenWidth;
 
         // crop with percentage of screen * actual image
         // multiply with the actual width and height of the image, which just means the dimensions of the device
         const cropped = image.crop(
-          xPercent * image.width,
-          yPercent * image.height,
-          widthPercent * image.width,
-          heightPercent * image.height,
+          cropRegion.x * scale,
+          cropRegion.y * scale,
+          cropRegion.width * scale,
+          cropRegion.height * scale,
         );
         setImageState(cropped);
+
       }
 
       // dispose after to save memory
@@ -97,19 +94,17 @@ export default function CapturePage() {
       {/* && produces falsy if no image has been taken*/}
       {imageState &&
         <View style={{
-          top: '50%',
-          left: '10%',
           width: 350,
           height: 150,
+          top: '50%',
+          left: '10%',
           borderColor: "red",
           borderWidth: 5,
-          overflow: 'hidden',
-          alignSelf: 'center',
           position: 'absolute',
         }}>
         {/*render the image itself*/}
         <NitroImage
-          style={{ flex: 1  }}
+          style={{flex: 1}}
           // ! tells TS it's definitely not null from Image | null since it cannot be assigned that way
           image={imageState!}
         />
