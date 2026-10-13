@@ -24,7 +24,6 @@ export default function CapturePage() {
 
   // get dimensions from screen
   const screenWidth = Dimensions.get('window').width;
-  const screenHeight = Dimensions.get('window').height;
 
 
   // runs after render, checks for data change after render
