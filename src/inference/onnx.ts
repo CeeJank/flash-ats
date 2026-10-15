@@ -24,7 +24,7 @@ async function startInference(): Promise<void> {
     return sessionActive;
   }
 
-  sessionActive = inference().finally(() => {
+  sessionActive = inference(arrayBuffer).finally(() => {
     sessionActive = null;
   });
   return sessionActive;
@@ -32,9 +32,18 @@ async function startInference(): Promise<void> {
 }
 
 
-export async function inference():Promise<void> {
+// pass the pinSlots
+export async function inference(arrayBuffer: Float32Array):Promise<void> {
   try {
     const session = await getSession();
+
+    // prep the data for Float32Array
+    const data = arrayBuffer;
+
+    // results
+    const result = await session.run({a: new Tensor('float32', data, [1, 1, 28, 28])})
+
+    console.log(result);
 
 
   } catch (err) {
